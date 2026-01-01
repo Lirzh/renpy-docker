@@ -1,13 +1,12 @@
-FROM openjdk:21-slim as base
-#FROM gradle:jdk21 as base
+FROM eclipse-temurin:21-jdk-jammy AS base
 ARG RENPY_VERSION=8.2.0
 ENV RENPY_VERSION=$RENPY_VERSION
-RUN apt-get update && apt-get install -y --no-install-recommends python3 libgl1 -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3 ca-certificates libgl1 -y && rm -rf /var/lib/apt/lists/*
 
-FROM base as base_build
+FROM base AS base_build
 RUN apt-get update && apt-get install -y --no-install-recommends wget unzip && rm -rf /var/lib/apt/lists/*
 
-FROM base_build as android_sdk
+FROM base_build AS android_sdk
 WORKDIR /android-sdk/cmdline-tools
 
 ENV SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip" \
@@ -24,7 +23,7 @@ RUN /android-sdk/cmdline-tools/latest/bin/sdkmanager --update
 RUN /android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-${ANDROID_VERSION}" \
     "build-tools;${ANDROID_BUILD_TOOLS_VERSION}"
 
-FROM base_build as renpy
+FROM base_build AS renpy
 WORKDIR /renpy-sdk
 
 RUN wget -O renpy.zip https://www.renpy.org/dl/$RENPY_VERSION/renpy-$RENPY_VERSION-sdk.zip && \
@@ -36,7 +35,7 @@ RUN wget -O renpy.zip https://www.renpy.org/dl/$RENPY_VERSION/renpy-$RENPY_VERSI
     mv renpy-*/* /renpy && \
     rm -rf /renpy/doc /renpy/tutorial
 
-FROM base_build as build
+FROM base_build AS build
 WORKDIR /renpy
 USER root
 
